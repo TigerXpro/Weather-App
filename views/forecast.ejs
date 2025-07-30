@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast - <%= location || 'Search' %></title>
+    
+    <!-- Preconnect for faster font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Search Again Section -->
+        <div class="search-section">
+            <h2>Search Another Location</h2>
+            <form action="/forecast" method="POST" class="search-form">
+                <input type="text" name="location" placeholder="Enter location..." required>
+                <button type="submit">SEARCH</button>
+            </form>
+        </div>
+
+        <!-- Weather Results Section -->
+        <% if (error) { %>
+            <div class="error-section">
+                <h2>⚠️ Error</h2>
+                <p><%= error %></p>
+                <a href="/" class="back-home">← Back to Search</a>
+            </div>
+        <% } else if (currentWeather && location) { %>
+            <div class="results-section">
+                <h2>Weather for <%= location %></h2>
+                
+                <!-- Current Weather -->
+                <div class="weather-current">
+                    <h3>Current Weather</h3>
+                    <div class="temperature"><%= currentWeather.temperature %>°C</div>
+                    <p>Wind Speed: <%= currentWeather.windspeed %> km/h</p>
+                    <p>Wind Direction: <%= currentWeather.winddirection %>°</p>
+                    <p>Weather Code: <%= currentWeather.weathercode %></p>
+                </div>
+
+                <!-- Weather Details -->
+                <div class="weather-details">
+                    <div class="detail-card">
+                        <h4>Temperature</h4>
+                        <div class="detail-value"><%= currentWeather.temperature %>°C</div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h4>Wind Speed</h4>
+                        <div class="detail-value"><%= currentWeather.windspeed %> km/h</div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h4>Wind Direction</h4>
+                        <div class="detail-value"><%= currentWeather.winddirection %>°</div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h4>Location</h4>
+                        <div class="detail-value"><%= location %></div>
+                    </div>
+                </div>
+
+                <!-- Hourly Forecast (if available) -->
+                <% if (hourlyData && hourlyData.time) { %>
+                    <div class="hourly-forecast">
+                        <h3>24-Hour Forecast</h3>
+                        <div class="hourly-grid">
+                            <% for (let i = 0; i < Math.min(12, hourlyData.time.length); i++) { %>
+                                <div class="hourly-item">
+                                    <div class="hour"><%= new Date(hourlyData.time[i]).getHours() %>:00</div>
+                                    <div class="temp"><%= hourlyData.temperature_2m[i] %>°C</div>
+                                    <% if (hourlyData.wind_speed_10m && hourlyData.wind_speed_10m[i]) { %>
+                                        <div class="wind">💨 <%= hourlyData.wind_speed_10m[i] %> km/h</div>
+                                    <% } %>
+                                    <% if (hourlyData.relative_humidity_2m && hourlyData.relative_humidity_2m[i]) { %>
+                                        <div class="humidity">💧 <%= hourlyData.relative_humidity_2m[i] %>%</div>
+                                    <% } %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Coordinates Info -->
+                <% if (coordinates) { %>
+                    <div class="coordinates-info">
+                        <p><strong>Coordinates:</strong> <%= coordinates.lat.toFixed(4) %>, <%= coordinates.lng.toFixed(4) %></p>
+                        <% if (timestamp) { %>
+                            <p><strong>Last Updated:</strong> <%= new Date(timestamp).toLocaleString() %></p>
+                        <% } %>
+                    </div>
+                <% } %>
+
+                <a href="/" class="back-home">← Search Another Location</a>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
