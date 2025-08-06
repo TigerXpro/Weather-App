@@ -54,7 +54,7 @@ const { postForecast, getForecast, getWeatherAPI } = {
             const { current_weather: currentWeather, hourly: hourlyData } = weatherData;
             
             res.render("forecast", {
-                error: null, // ← ADD THIS
+                error: null,
                 location: locationName,
                 coordinates: { lat, lng },
                 currentWeather,
@@ -81,7 +81,6 @@ const { postForecast, getForecast, getWeatherAPI } = {
     },
 
     getWeatherAPI: async (req, res) => {
-        // ... keep this the same
         const { location } = req.params;
         
         try {

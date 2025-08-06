@@ -12,19 +12,60 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Your CSS -->
+    <!-- CSS -->
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
+    <% 
+        // Define the weather code interpretation function/map
+        // This function translates the numerical WMO weather codes into descriptive strings.
+        const getWeatherDescription = (code) => {
+            switch(code) {
+                case 0: return "Clear sky";
+                case 1: return "Mainly clear";
+                case 2: return "Partly cloudy";
+                case 3: return "Overcast";
+                case 45: return "Fog";
+                case 48: return "Depositing rime fog";
+                case 51: return "Light drizzle";
+                case 53: return "Moderate drizzle";
+                case 55: return "Dense drizzle";
+                case 56: return "Light freezing drizzle";
+                case 57: return "Dense freezing drizzle";
+                case 61: return "Slight rain";
+                case 63: return "Moderate rain";
+                case 65: return "Heavy rain";
+                case 66: return "Light freezing rain";
+                case 67: return "Heavy freezing rain";
+                case 71: return "Slight snow fall";
+                case 73: return "Moderate snow fall";
+                case 75: return "Heavy snow fall";
+                case 77: return "Snow grains";
+                case 80: return "Slight rain showers";
+                case 81: return "Moderate rain showers";
+                case 82: return "Violent rain showers";
+                case 85: return "Slight snow showers";
+                case 86: return "Heavy snow showers";
+                case 95: return "Thunderstorm"; // *
+                case 96: return "Thunderstorm with slight hail"; // *
+                case 99: return "Thunderstorm with heavy hail"; // *
+                default: return "Unknown weather condition";
+            }
+        };
+    %>
+
     <div class="container">
         <!-- Search Again Section -->
-        <div class="search-section">
-            <h2>Search Another Location</h2>
-            <form action="/forecast" method="POST" class="search-form">
-                <input type="text" name="location" placeholder="Enter location..." required>
-                <button type="submit">SEARCH</button>
-            </form>
-        </div>
+        <% if (!error) { %>
+            <div class="search-section">
+                <h2>Search Another Location</h2>
+                <form action="/forecast" method="POST" class="search-form">
+                    <input type="text" name="location" placeholder="Enter location..." required>
+                    <button type="submit">SEARCH</button>
+                </form>
+            </div>
+        <% } %>    
 
         <!-- Weather Results Section -->
         <% if (error) { %>
@@ -35,15 +76,19 @@
             </div>
         <% } else if (currentWeather && location) { %>
             <div class="results-section">
-                <h2>Weather for <%= location %></h2>
+                <h2><%= location %></h2>
+
+                <!-- Coordinates Info -->
+                <% if (coordinates) { %>
+                    <div class="coordinates-info">
+                        <p>Latitude: <%= coordinates.lat.toFixed(7) %> | Longtitude: <%= coordinates.lng.toFixed(7) %></p>
+                    </div>
+                <% } %>
                 
                 <!-- Current Weather -->
                 <div class="weather-current">
-                    <h3>Current Weather</h3>
-                    <div class="temperature"><%= currentWeather.temperature %>°C</div>
-                    <p>Wind Speed: <%= currentWeather.windspeed %> km/h</p>
-                    <p>Wind Direction: <%= currentWeather.winddirection %>°</p>
-                    <p>Weather Code: <%= currentWeather.weathercode %></p>
+                    <h3>Current Weather:</h3>
+                    <p><%= getWeatherDescription(currentWeather.weathercode) %></p>
                 </div>
 
                 <!-- Weather Details -->
@@ -62,11 +107,6 @@
                         <h4>Wind Direction</h4>
                         <div class="detail-value"><%= currentWeather.winddirection %>°</div>
                     </div>
-                    
-                    <div class="detail-card">
-                        <h4>Location</h4>
-                        <div class="detail-value"><%= location %></div>
-                    </div>
                 </div>
 
                 <!-- Hourly Forecast (if available) -->
@@ -74,7 +114,19 @@
                     <div class="hourly-forecast">
                         <h3>24-Hour Forecast</h3>
                         <div class="hourly-grid">
-                            <% for (let i = 0; i < Math.min(12, hourlyData.time.length); i++) { %>
+                            <% 
+                                const currentHour = new Date().getHours();
+                                let startIndex = 0;
+                                for (let i = 0; i < hourlyData.time.length; i++) {
+                                    const forecastHour = new Date(hourlyData.time[i]).getHours();
+                                    if (forecastHour >= currentHour) {
+                                        startIndex = i;
+                                        break;
+                                    }
+                                }
+                                const endIndex = Math.min(startIndex + 24, hourlyData.time.length);
+                                for (let i = startIndex; i < endIndex; i++) {
+                            %>
                                 <div class="hourly-item">
                                     <div class="hour"><%= new Date(hourlyData.time[i]).getHours() %>:00</div>
                                     <div class="temp"><%= hourlyData.temperature_2m[i] %>°C</div>
@@ -82,7 +134,7 @@
                                         <div class="wind">💨 <%= hourlyData.wind_speed_10m[i] %> km/h</div>
                                     <% } %>
                                     <% if (hourlyData.relative_humidity_2m && hourlyData.relative_humidity_2m[i]) { %>
-                                        <div class="humidity">💧 <%= hourlyData.relative_humidity_2m[i] %>%</div>
+                                        <div class="humidity">🌧️ <%= hourlyData.relative_humidity_2m[i] %>%</div>
                                     <% } %>
                                 </div>
                             <% } %>
@@ -90,17 +142,14 @@
                     </div>
                 <% } %>
 
-                <!-- Coordinates Info -->
-                <% if (coordinates) { %>
-                    <div class="coordinates-info">
-                        <p><strong>Coordinates:</strong> <%= coordinates.lat.toFixed(4) %>, <%= coordinates.lng.toFixed(4) %></p>
-                        <% if (timestamp) { %>
-                            <p><strong>Last Updated:</strong> <%= new Date(timestamp).toLocaleString() %></p>
-                        <% } %>
+                <!-- Last Updated -->
+                <% if (timestamp) { %>
+                    <div class="last-updated">
+                        <p><strong>Last Updated:</strong> <%= new Date(timestamp).toLocaleString() %></p>
                     </div>
                 <% } %>
 
-                <a href="/" class="back-home">← Search Another Location</a>
+                <a href="/" class="back-home">← Return to homepage</a>
             </div>
         <% } %>
     </div>
